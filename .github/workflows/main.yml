@@ -1,0 +1,60 @@
+name: build
+
+on:
+  push:
+    paths-ignore:
+    - LICENSE
+    - README.md
+    branches: master
+
+jobs:
+  build:
+    name: build with sm${{ matrix.sm_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        sm_version:
+          - "1.8"
+          - "1.9"
+          - "1.10"
+          - "1.11"
+          
+    steps:
+      - name: Setup SourcePawn compiler ${{ matrix.sm_version }}
+        uses: rumblefrog/setup-sp@master
+        with:
+          version: ${{ matrix.sm_version }}
+          
+      - name: Checking out own repository
+        uses: actions/checkout@v2
+        with:
+          path: sp_public
+          
+      - name: Compiling plugins
+        shell: bash
+        run: |
+          # Prepare hierarchy
+          mkdir -p package/addons/sourcemod/plugins/
+          
+          find sp_public -mindepth 2 -maxdepth 2 -type d -not -path 'sp_public/\.*' -print | while read PLUGIN_DIR; do
+            # Copy other files (sources, gamedata, configs)
+            cp -ra "$PLUGIN_DIR" package/addons/sourcemod/
+            
+            find "$PLUGIN_DIR" -type f -name '*.sp' -print | while read PLUGIN_FILE; do
+              # Compile every SourcePawn source file
+              spcomp -v2 -i "$PLUGIN_DIR/include" "$PLUGIN_FILE"
+            done
+          done
+          
+          # Move compiled files
+          mv *.smx package/addons/sourcemod/plugins/ &> /dev/null
+          
+          # Do not upload package if there's nothing to upload
+          find package/ -mindepth 1 -type d -empty -delete
+          
+      - name: Uploading package
+        uses: actions/upload-artifact@v2
+        with:
+          name: sppub-sm${{ matrix.sm_version }}
+          path: package

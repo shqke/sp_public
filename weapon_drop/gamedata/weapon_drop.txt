@@ -1,0 +1,43 @@
+"Games"
+{
+	"#default"
+	{
+		"Signatures"
+		{
+			"CCSPlayer::CSWeaponDrop"
+			{
+				"library"	"server"
+				"linux"		"@_ZN9CCSPlayer12CSWeaponDropEP17CBaseCombatWeaponbbP6Vector"
+				"mac"		"@_ZN9CCSPlayer12CSWeaponDropEP17CBaseCombatWeaponbbP6Vector"
+			}
+		}
+	}
+
+	"left4dead"
+	{
+		"Signatures"
+		{
+			"CCSPlayer::CSWeaponDrop"
+			{
+				"library"	"server"
+				// Locate CCSPlayer::DropWeapons by string "weapon_c4", second call
+				// 81 EC 3C 01 00 00 53 55
+				"windows"	"\x81\xEC\x3C\x01\x00\x00\x53\x55"
+			}
+		}
+	}
+
+	"left4dead2"
+	{
+		"Signatures"
+		{
+			"CCSPlayer::CSWeaponDrop"
+			{
+				"library"	"server"
+				// Locate CCSPlayer::DropWeapons by string "weapon_c4", second call
+				// 53 8B DC 83 EC 08 83 E4 F0 83 C4 04 55 8B 6B 04 89 6C 24 04 8B EC 81 EC D8 01 00 00
+				"windows"	"\x53\x8B\xDC\x83\xEC\x08\x83\xE4\xF0\x83\xC4\x04\x55\x8B\x6B\x04\x89\x6C\x24\x04\x8B\xEC\x81\xEC\xD8\x01\x00\x00"
+			}
+		}
+	}
+}
