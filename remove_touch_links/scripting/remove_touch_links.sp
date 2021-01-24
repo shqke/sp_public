@@ -11,7 +11,7 @@ Handle g_hPhysicsRemoveTouchedList;
 public void Event_player_team(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(event.GetInt("userid"));
-    if (client != 0 && !IsClientInGame(client)) {
+    if (client == 0 || !IsClientInGame(client)) {
         return;
     }
 
@@ -64,6 +64,6 @@ public Plugin myinfo =
     name = "[L4D/2] Reset Touch Links",
     author = "shqke",
     description = "Removes touch links on team change",
-    version = "1.1",
+    version = "1.2",
     url = "https://github.com/shqke/sp_public"
 };
