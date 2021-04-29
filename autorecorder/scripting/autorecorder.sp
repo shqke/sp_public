@@ -39,5 +39,5 @@ public Plugin myinfo =
     author = "shqke",
     description = "Plugin takes control over demo recording process allowing to record only useful footage",
     version = "1.0",
-    url = "https://github.com/shqke/sp_public/blob/master/autorecorder"
+    url = "https://github.com/shqke/sp_public"
 };
