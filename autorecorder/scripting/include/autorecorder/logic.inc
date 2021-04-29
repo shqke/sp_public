@@ -188,7 +188,7 @@ void TryStartAutoRecording(const char[] reason)
     }
 }
 
-public void Handler_Frame_CheckStopRecording()
+public void Handler_Frame_CheckStopRecording(any data)
 {
     if (!sm_autorecord_enable.BoolValue) {
         return;
@@ -252,7 +252,7 @@ public void Handler_Frame_CheckStopRecording()
 
 public Action RunThink(Handle timer)
 {
-    Handler_Frame_CheckStopRecording();
+    Handler_Frame_CheckStopRecording(0);
 
     return Plugin_Continue;
 }
@@ -301,7 +301,7 @@ public void OnConfigsExecuted()
     TryStartAutoRecording("Config executed");
 }
 
-public void Handler_Frame_MapStart()
+public void Handler_Frame_MapStart(any data)
 {
     TryStartAutoRecording("Map started");
 }
