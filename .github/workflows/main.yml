@@ -5,7 +5,12 @@ on:
     paths-ignore:
     - LICENSE
     - README.md
-    branches: master
+  pull_request:
+    paths-ignore:
+    - LICENSE
+    - README.md
+  schedule:
+    - cron: '30 03 01 */3 *' # Artifacts expire every 3 months
 
 jobs:
   build:
@@ -21,6 +26,11 @@ jobs:
           - "1.11"
           
     steps:
+      - name: Prepare env
+        shell: bash
+        run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+          
       - name: Setup SourcePawn compiler ${{ matrix.sm_version }}
         uses: rumblefrog/setup-sp@master
         with:
@@ -56,5 +66,5 @@ jobs:
       - name: Uploading package
         uses: actions/upload-artifact@v2
         with:
-          name: sppub-sm${{ matrix.sm_version }}
+          name: sppub-sm${{ matrix.sm_version }}-${{ env.GITHUB_SHA_SHORT }}
           path: package
