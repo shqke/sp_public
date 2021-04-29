@@ -146,7 +146,7 @@ bool TryStartRecording(const char[] format, char[] error, int maxlength)
     }
 
     // Use umask on linux to override this
-    if (!Util_CreateDirHierarchy(path, 0o777)) {
+    if (!Util_CreateDirHierarchy(path)) {
         Format(error, maxlength, "Failed to create directory hierarchy for path \"%s\"", path);
         
         return false;

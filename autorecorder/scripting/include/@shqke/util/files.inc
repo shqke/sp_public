@@ -53,7 +53,7 @@ stock bool Util_IsValidPath(const char[] path)
     return true;
 }
 
-stock bool Util_CreateDirHierarchy(const char[] path, int mode = 0o755)
+stock bool Util_CreateDirHierarchy(const char[] path, int mode = 0x1FF)
 {
     int pos = 0;
     char dir[PLATFORM_MAX_PATH];
