@@ -11,6 +11,7 @@ Convars
 - `sm_autorecord_roundsplit` - Restart demo on `round_start` event rather than on a map change, default: `"1"`
 - `sm_autorecord_sizesplit` - Restart demo when reached file size, in megabytes (MB), `0` - disables, default: `"0"`
 - `sm_autorecord_lengthsplit` - Restart recording if demo is too long, in seconds, `0` - disables, default: `"0"`
+- `sm_autorecord_allowoverwrites` - If disabled, append a `.<counter>` before extension if file exists (up to 10000), default: `"0"`
 - `sm_autorecord_pathfmt` - Custom path format (relative to mod folder) for recordings, default: `""`
 - `sm_server_uid` - Unique server string identifier, default: `""`
 
@@ -24,7 +25,7 @@ Admin Commands
 Format Specifiers
 ------
 - `%s` - unix timestamp of when recording has started
-- `%q` - randomly generated short number in range `[0-65535]`
+- `%q` - randomly generated number in range `[0-99999]`
 - `%f` - game folder (e.g. `left4dead2`)
 - `%l` - level name without extension (e.g. `c8m1_apartment`)
 - `%i` - unique id (from convar `sm_server_uid`)
@@ -34,7 +35,7 @@ Format Specifiers
 
 Also supports single character time format specifiers from https://www.cplusplus.com/reference/ctime/strftime/
 
-Default format is `auto-%Y%m%d-%H%M%S-%l-%q.dem` which expands into `auto-20200101-234820-c8m1_apartment-4321.dem`.
+Default format is `auto-%Y%m%d-%H%M%S-%l-%q` which expands into `auto-20200101-234820-c8m1_apartment-4321.dem`.
 
 Note
 ------

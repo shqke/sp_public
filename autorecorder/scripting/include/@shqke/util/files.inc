@@ -101,3 +101,19 @@ stock bool Util_DefaultExtension(char[] path, int maxlength, const char[] ext)
     
     return true;
 }
+
+stock bool Util_StripKnownExtension(char[] path, const char[] ext)
+{
+    int pos = strlen(path) - strlen(ext);
+    if (pos < 0) {
+        return false;
+    }
+    
+    if (strcmp(path[pos], ext) != 0) {
+        return false;
+    }
+    
+    path[pos] = '\0';
+    
+    return true;
+}

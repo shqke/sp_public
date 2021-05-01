@@ -22,6 +22,7 @@ ConVar sm_autorecord_roundsplit = null;
 ConVar sm_autorecord_sizesplit = null;
 ConVar sm_autorecord_lengthsplit = null;
 
+ConVar sm_autorecord_allowoverwrites = null;
 ConVar sm_autorecord_pathfmt = null;
 
 float g_flLastMinPlayersTest = -1.0;
@@ -56,9 +57,9 @@ int FormatPathString(char[] buffer, int maxlength, const char[] format)
             {
                 pos += Format(buffer[pos], maxlength - pos, "%u", GetTime());
             }
-            case 'q': // Random short integer
+            case 'q': // Random number
             {
-                pos += Format(buffer[pos], maxlength - pos, "%u", GetURandomInt() % 0xFFFF);
+                pos += Format(buffer[pos], maxlength - pos, "%u", GetURandomInt() % 100000);
             }
             case 'f': // Mod folder
             {
@@ -130,35 +131,45 @@ bool TryStartRecording(const char[] format, char[] error, int maxlength)
     
     if (path[0] == '\0') {
         // Form a default path
-        FormatPathString(path, sizeof(path), "auto-%Y%m%d-%H%M%S-%l-%q.dem");
+        FormatPathString(path, sizeof(path), "auto-%Y%m%d-%H%M%S-%l-%q");
     }
     
+    Util_StripKnownExtension(path, ".dem");
     if (!Util_IsValidPath(path)) {
         strcopy(error, maxlength, "Invalid path");
         
         return false;
     }
-
-    if (!Util_DefaultExtension(path, sizeof(path), ".dem")) {
-        strcopy(error, maxlength, "Buffer size is too small");
-        
-        return false;
-    }
-
+    
     // Use umask on linux to override this
     if (!Util_CreateDirHierarchy(path)) {
         Format(error, maxlength, "Failed to create directory hierarchy for path \"%s\"", path);
         
         return false;
     }
-
-    if (!SourceTV_StartRecording(path)) {
-        Format(error, maxlength, "Failed to start a recording into \"%s\"", path);
+    
+    int pathlen = strlen(path);
+    bool bAllowOverwrites = sm_autorecord_allowoverwrites.BoolValue;
+    
+    // perf test 0.0244
+    for (int i = 0; i < 10000; i++) {
+        Format(path[pathlen], sizeof(path) - pathlen, ( i == 0 ) ? ".dem" : ".%d.dem", i);
+        if (!bAllowOverwrites && FileExists(path)) {
+            continue;
+        }
         
-        return false;
+        if (!SourceTV_StartRecording(path)) {
+            Format(error, maxlength, "Failed to start a recording into \"%s\"", path);
+            
+            return false;
+        }
+        
+        return true;
     }
-
-    return true;
+    
+    strcopy(error, maxlength, "Failed to form a unique path");
+    
+    return false;
 }
 
 void TryStartAutoRecording(const char[] reason)
@@ -341,10 +352,11 @@ void Logic_Init()
     sm_autorecord_sizesplit = CreateConVar("sm_autorecord_sizesplit", "0", "Restart recording if demo file has reached max size, in megabytes");
     sm_autorecord_lengthsplit = CreateConVar("sm_autorecord_lengthsplit", "0", "Restart recording after time of footage, in minutes");
     
+    sm_autorecord_allowoverwrites = CreateConVar("sm_autorecord_allowoverwrites", "0", "Allow file overwrites, or append .i.dem to the end of path");
     sm_autorecord_pathfmt = CreateConVar("sm_autorecord_pathfmt", "", "Format string specifying a path where to record demo files.\n"
         ... "	Available specifiers:\n"
         ... "	%s - unix timestamp of when recording has started\n"
-        ... "	%q - randomly generated short number in range of 0-65535 (inclusive)\n"
+        ... "	%q - randomly generated number in range [0-99999]\n"
         ... "	%f - game folder (e.g. left4dead2)\n"
         ... "	%l - level name without extension (e.g. c8m1_apartment)\n"
         ... "	%i - unique id (from convar sm_server_uid)\n"
