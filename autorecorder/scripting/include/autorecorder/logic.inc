@@ -41,7 +41,7 @@ int FormatPathString(char[] buffer, int maxlength, const char[] format)
     bool expectSpecifier = false;
     int pos = 0;
     
-    for (int i = 0; i < maxlength && pos + 1 <= maxlength && format[i] != '\0'; i++) {
+    for (int i = 0; i < maxlength && pos < maxlength && format[i] != '\0'; i++) {
         if (format[i] == '%' && (expectSpecifier = !expectSpecifier)) {
             continue;
         }
@@ -67,7 +67,6 @@ int FormatPathString(char[] buffer, int maxlength, const char[] format)
             }
             case 'l': // Level name
             {
-                // rww: check base name for maps in subfolders
                 pos += strcopy(buffer[pos], maxlength - pos, g_szLevelName);
             }
             case 'i': // String value of sm_server_uid
@@ -99,6 +98,8 @@ int FormatPathString(char[] buffer, int maxlength, const char[] format)
         expectSpecifier = false;
     }
     
+    buffer[pos] = '\0';
+    
     return pos;
 }
 
@@ -116,60 +117,84 @@ bool TryStartRecording(const char[] format, char[] error, int maxlength)
         return false;
     }
     
-    char path[PLATFORM_MAX_PATH] = "";
+    int pathlen = 0;
+    // + 1 - overflow test to be exact when forming paths
+    char path[PLATFORM_MAX_PATH + 1] = "";
     if (format[0] != '\0') {
         // Form a path from given format
-        FormatPathString(path, sizeof(path), format);
+        pathlen = FormatPathString(path, sizeof(path), format);
     }
     
     if (path[0] == '\0') {
         // Form a path from cvar sm_autorecord_pathfmt
         char cvarfmt[PLATFORM_MAX_PATH];
         sm_autorecord_pathfmt.GetString(cvarfmt, sizeof(cvarfmt));
-        FormatPathString(path, sizeof(path), cvarfmt);
+        pathlen = FormatPathString(path, sizeof(path), cvarfmt);
     }
     
     if (path[0] == '\0') {
-        // Form a default path
-        FormatPathString(path, sizeof(path), "auto-%Y%m%d-%H%M%S-%l-%q");
+        // Form a path from default format
+        pathlen = FormatPathString(path, sizeof(path), "auto-%Y%m%d-%H%M%S-%l-%q");
     }
     
-    Util_StripKnownExtension(path, ".dem");
+    if (pathlen == sizeof(path) - 1) {
+        Format(error, maxlength, "Buffer overflow (path: \"%s\")", path);
+        
+        return false;
+    }
+    
     if (!Util_IsValidPath(path)) {
-        strcopy(error, maxlength, "Invalid path");
+        Format(error, maxlength, "Invalid path \"%s\"", path);
         
         return false;
     }
     
-    // Use umask on linux to override this
-    if (!Util_CreateDirHierarchy(path)) {
-        Format(error, maxlength, "Failed to create directory hierarchy for path \"%s\"", path);
+    // File mode - 0775 (u+rwx g+rwx o+rx), use umask on linux to override this
+    if (!Util_CreateDirHierarchy(path, 0x1FD)) {
+        Format(error, maxlength, "Failed to create directory hierarchy (path: \"%s\")", path);
         
         return false;
     }
     
-    int pathlen = strlen(path);
     bool bAllowOverwrites = sm_autorecord_allowoverwrites.BoolValue;
+    pathlen = Util_StripKnownExtension(path, ".dem");
     
     // perf test 0.0244
-    for (int i = 0; i < 10000; i++) {
-        Format(path[pathlen], sizeof(path) - pathlen, ( i == 0 ) ? ".dem" : ".%d.dem", i);
-        if (!bAllowOverwrites && FileExists(path)) {
-            continue;
-        }
-        
-        if (!SourceTV_StartRecording(path)) {
-            Format(error, maxlength, "Failed to start a recording into \"%s\"", path);
+    for (int i = 0; ; i++) {
+        if (i == 10000) {
+            path[pathlen] = '\0';
+            Format(error, maxlength, "Failed to form a unique file name - ran out of retries (path: \"%s.dem\")", path);
             
             return false;
         }
         
-        return true;
+        int written = Format(path[pathlen], sizeof(path) - pathlen, ( i == 0 ) ? ".dem" : ".%d.dem", i);
+        if (pathlen + written == sizeof(path) - 1) {
+            path[pathlen] = '\0';
+            
+            if (i == 0) {
+                Format(error, maxlength, "Failed to form a file name - buffer overflow (path: \"%s.dem\")", path);
+            }
+            else {
+                Format(error, maxlength, "Failed to form a unique file name - buffer overflow (path: \"%s.%d.dem\")", path, i);
+            }
+            
+            return false;
+        }
+        
+        if (bAllowOverwrites || !FileExists(path)) {
+            // Formed a file path - now start recording
+            break;
+        }
     }
     
-    strcopy(error, maxlength, "Failed to form a unique path");
+    if (!SourceTV_StartRecording(path)) {
+        Format(error, maxlength, "Failed to start a recording (path: \"%s\")", path);
+        
+        return false;
+    }
     
-    return false;
+    return true;
 }
 
 void TryStartAutoRecording(const char[] reason)
@@ -190,7 +215,7 @@ void TryStartAutoRecording(const char[] reason)
         return;
     }
 
-    char error[256];
+    char error[512];
     if (TryStartRecording(NULL_STRING, error, sizeof(error))) {
         LogMessage("Started autorecording (reason: \"%s\")", reason);
     }
@@ -231,7 +256,7 @@ public void Handler_Frame_CheckStopRecording(any data)
     int maxsize = sm_autorecord_sizesplit.IntValue;
     if (maxsize > 0) {
         int bytes = FileSize(g_szDemoPath);
-        if (bytes / 1000 / 1000 > maxsize) {
+        if (bytes / 1000 / 1000 >= maxsize) {
             char szSize[64];
             Util_FormatBytes(szSize, sizeof(szSize), bytes);
             
@@ -247,7 +272,7 @@ public void Handler_Frame_CheckStopRecording(any data)
     int maxlength = sm_autorecord_lengthsplit.IntValue;
     if (maxlength > 0) {
         int seconds = RoundToCeil(GetTickInterval() * SourceTV_GetRecordingTick());
-        if (seconds / 60 > maxlength) {
+        if (seconds / 60 >= maxlength) {
             char szLength[64];
             Util_FormatSeconds(szLength, sizeof(szLength), seconds);
             
@@ -319,7 +344,9 @@ public void Handler_Frame_MapStart(any data)
 
 public void OnMapStart()
 {
-    GetCurrentMap(g_szLevelName, sizeof(g_szLevelName));
+    char path[PLATFORM_MAX_PATH];
+    GetCurrentMap(path, sizeof(path));
+    Util_UnqualifiedFileName(g_szLevelName, sizeof(g_szLevelName), path);
     
     // RequestFrame would deal with server not processing frames
     RequestFrame(Handler_Frame_MapStart);

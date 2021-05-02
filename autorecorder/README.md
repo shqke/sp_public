@@ -10,7 +10,7 @@ Convars
 - `sm_autorecord_ignorebots` - Don't count bots in when counting players, default: `"1"`
 - `sm_autorecord_roundsplit` - Restart demo on `round_start` event rather than on a map change, default: `"1"`
 - `sm_autorecord_sizesplit` - Restart demo when reached file size, in megabytes (MB), `0` - disables, default: `"0"`
-- `sm_autorecord_lengthsplit` - Restart recording if demo is too long, in seconds, `0` - disables, default: `"0"`
+- `sm_autorecord_lengthsplit` - Restart recording if demo is too long, in minutes, `0` - disables, default: `"0"`
 - `sm_autorecord_allowoverwrites` - If disabled, append a `.<counter>` before extension if file exists (up to 10000), default: `"0"`
 - `sm_autorecord_pathfmt` - Custom path format (relative to mod folder) for recordings, default: `""`
 - `sm_server_uid` - Unique server string identifier, default: `""`
@@ -20,7 +20,7 @@ Admin Commands
 - `sm_record [path]` - Start recording to file
   - `path` - optional file path, `sm_autorecord_pathfmt` convar value otherwise or fall back to default format
 - `sm_stoprecord` - Stop recording
-- `sm_status` - View recording details
+- `sm_recordstatus` - View recording details
 
 Format Specifiers
 ------
@@ -39,7 +39,7 @@ Default format is `auto-%Y%m%d-%H%M%S-%l-%q` which expands into `auto-20200101-2
 
 Note
 ------
-Plugin would attempt to create subdirectories with a file mode `0777`, allowing to read, write and execute by everyone.
+Plugin would attempt to create subdirectories with a file mode `0775`, allowing to read, write and execute by user and group, read and write by others.
 
 On Linux consider using [umask](https://man7.org/linux/man-pages/man1/umask.1p.html) in your shell script if you need to override file mode creation mask (default is 022).
 

@@ -5,7 +5,7 @@
 
 #include <autorecorder/logic>
 
-public Action sm_status(int client, int args)
+public Action sm_recordstatus(int client, int args)
 {
     if (!SourceTV_IsActive()) {
         ReplyToCommand(client, "SourceTV is not active.");
@@ -25,7 +25,7 @@ public Action sm_status(int client, int args)
     char szSize[64];
     Util_FormatBytes(szSize, sizeof(szSize), FileSize(g_szDemoPath));
     
-    ReplyToCommand(client, "Recording to \"%s\", length: %s, size: %s", g_szDemoPath, szLength, szSize);
+    ReplyToCommand(client, "Recording to \"%s\" (length: %s, size: %s)", g_szDemoPath, szLength, szSize);
 
     return Plugin_Handled;
 }
@@ -49,7 +49,7 @@ public Action sm_record(int client, int args)
         GetCmdArg(1, path, sizeof(path));
     }
 
-    char error[256];
+    char error[512];
     if (TryStartRecording(path, error, sizeof(error))) {
         ReplyToCommand(client, "Recording SourceTV demo to \"%s\"", g_szDemoPath);
         LogAction(client, -1, "Recording started by %L (path: \"%s\")", client, g_szDemoPath);
@@ -86,7 +86,7 @@ public Action sm_stoprecord(int client, int args)
 
 void Console_Init()
 {
-    RegAdminCmd("sm_status", sm_status, ADMFLAG_ROOT, "sm_status - Show recording information.");
+    RegAdminCmd("sm_recordstatus", sm_recordstatus, ADMFLAG_ROOT, "sm_recordstatus - Show recording information.");
     RegAdminCmd("sm_record", sm_record, ADMFLAG_ROOT, "sm_record [path] - Record a new demo.");
     RegAdminCmd("sm_stoprecord", sm_stoprecord, ADMFLAG_ROOT, "sm_stoprecord - Stop recording.");
 }

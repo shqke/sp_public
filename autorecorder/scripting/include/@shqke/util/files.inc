@@ -53,7 +53,7 @@ stock bool Util_IsValidPath(const char[] path)
     return true;
 }
 
-stock bool Util_CreateDirHierarchy(const char[] path, int mode = 0x1FF)
+stock bool Util_CreateDirHierarchy(const char[] path, int mode)
 {
     int pos = 0;
     char dir[PLATFORM_MAX_PATH];
@@ -74,7 +74,7 @@ stock bool Util_CreateDirHierarchy(const char[] path, int mode = 0x1FF)
     return true;
 }
 
-stock bool Util_DefaultExtension(char[] path, int maxlength, const char[] ext)
+stock int Util_DefaultExtension(char[] path, int maxlength, const char[] ext)
 {
     int pathlen = strlen(path);
     if (pathlen >= maxlength) {
@@ -83,37 +83,59 @@ stock bool Util_DefaultExtension(char[] path, int maxlength, const char[] ext)
     
     int extlen = strlen(ext);
     if (pathlen < extlen) {
-        // Sane length check
-        return false;
+        // Length sanity check
+        return -1;
     }
     
-    // Check if already have extension
-    if (strcmp(path[pathlen - extlen], ext) != 0) {
-        // Check if have enough to append extension
-        if (maxlength <= pathlen + extlen) {
-            // Don't want to be replacing existing symbols
-            return false;
-        }
-        
-        // Append extension
-        strcopy(path[pathlen], maxlength - pathlen, ext);
+    if (strcmp(path[pathlen - extlen], ext) == 0) {
+        // Already have extension
+        return 0;
     }
     
-    return true;
+    if (maxlength <= pathlen + extlen) {
+        // Not enough space to append extension
+        return -1;
+    }
+    
+    // Append extension
+    return strcopy(path[pathlen], maxlength - pathlen, ext);
 }
 
-stock bool Util_StripKnownExtension(char[] path, const char[] ext)
+stock int Util_StripKnownExtension(char[] path, const char[] ext)
 {
-    int pos = strlen(path) - strlen(ext);
+    int pathlen = strlen(path);
+    int pos = pathlen - strlen(ext);
     if (pos < 0) {
-        return false;
+        // Length sanity check
+        return pathlen;
     }
     
     if (strcmp(path[pos], ext) != 0) {
-        return false;
+        // Extension isn't present
+        return pathlen;
     }
     
     path[pos] = '\0';
     
-    return true;
+    return pos;
+}
+
+stock int Util_UnqualifiedFileName(char[] name, int maxlength, const char[] path)
+{
+    if (path[0] == '\0') {
+        name[0] = '\0';
+        
+        return 0;
+    }
+    
+    int pos = strlen(path);
+    while (pos > 0) {
+        if (path[pos - 1] == '/' || path[pos - 1] == '\\') {
+            break;
+        }
+        
+        pos --;
+    }
+    
+    return strcopy(name, maxlength, path[pos]);
 }

@@ -38,6 +38,6 @@ public Plugin myinfo =
     name = "[L4D/2] Automated Demo Recording",
     author = "shqke",
     description = "Plugin takes control over demo recording process allowing to record only useful footage",
-    version = "1.1",
+    version = "1.2",
     url = "https://github.com/shqke/sp_public"
 };
