@@ -206,12 +206,25 @@ void TryStartAutoRecording(const char[] reason)
     if (!SourceTV_IsActive()) {
         return;
     }
+    
+    if (!SourceTV_IsMasterProxy()) {
+        return;
+    }
 
     if (SourceTV_IsRecording()) {
         return;
     }
 
     if (!HaveEnoughPlayers()) {
+        return;
+    }
+    
+    // CHLTVServer::StartMaster stops recording that round_start has initiated
+    // Event order on map change:
+    // round_start (gametime = 1.0)
+    // CHLTVServer::StartMaster() - no convenient trigger
+    // OnMapStart() (gametime > 1.0) - works in coop, versus and survival
+    if (GetGameTime() == 1.0) {
         return;
     }
 
