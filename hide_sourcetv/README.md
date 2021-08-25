@@ -4,7 +4,6 @@ Simple SourceMod plugin that hides SourceTV bot from a scoreboard.
 
 Requirements
 ------
-- [SourceTV Manager](https://github.com/peace-maker/sourcetvmanager)
 - [SourceTV Support](https://github.com/shqke/sourcetvsupport)
 
 Supported Games

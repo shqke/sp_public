@@ -1,27 +1,11 @@
 #include <sourcemod>
 
-#define REQUIRE_EXTENSIONS
-#include <sourcetvmanager>
-
 enum PlayerConnectedState
 {
     PlayerConnected,
     PlayerDisconnecting,
     PlayerDisconnected,
 };
-
-bool IsValidSourceTVBot(int client)
-{
-    if (client < 1 || client > MaxClients) {
-        return false;
-    }
-    
-    if (!IsClientInGame(client)) {
-        return false;
-    }
-    
-    return IsClientSourceTV(client);
-}
 
 void SetPlayerConnectedState(int client, PlayerConnectedState value)
 {
@@ -41,10 +25,20 @@ void SetPlayerConnectedState(int client, PlayerConnectedState value)
     SetEntData(client, m_iConnected, value);
 }
 
+void SetHLTVBotConnectedState(PlayerConnectedState newState)
+{
+    for (int i = 1; i <= MaxClients; i++) {
+        if (IsClientInGame(i) && IsClientSourceTV(i)) {
+            SetPlayerConnectedState(i, newState);
+            return;
+        }
+    }
+}
+
 public void Event_player_activate(Event event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(event.GetInt("userid"));
-    if (!IsValidSourceTVBot(client)) {
+    if (!IsClientSourceTV(client)) {
         return;
     }
     
@@ -53,20 +47,14 @@ public void Event_player_activate(Event event, const char[] name, bool dontBroad
 
 public void OnPluginStart()
 {
-    int client = SourceTV_GetBotIndex();
-    if (IsValidSourceTVBot(client)) {
-        SetPlayerConnectedState(client, PlayerDisconnected);
-    }
+    SetHLTVBotConnectedState(PlayerDisconnected);
     
     HookEvent("player_activate", Event_player_activate, EventHookMode_Post);
 }
 
 public void OnPluginEnd()
 {
-    int client = SourceTV_GetBotIndex();
-    if (IsValidSourceTVBot(client)) {
-        SetPlayerConnectedState(client, PlayerConnected);
-    }
+    SetHLTVBotConnectedState(PlayerConnected);
 }
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -88,6 +76,6 @@ public Plugin myinfo =
     name = "[L4D/2] Hide SourceTV Bot",
     author = "shqke",
     description = "Hides SourceTV bot from scoreboard",
-    version = "1.0",
+    version = "1.1",
     url = "https://github.com/shqke/sp_public"
 };

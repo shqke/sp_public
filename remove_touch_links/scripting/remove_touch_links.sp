@@ -14,6 +14,11 @@ public void Event_player_team(Event event, const char[] name, bool dontBroadcast
     if (client == 0 || !IsClientInGame(client)) {
         return;
     }
+    
+    if (!IsPlayerAlive(client)) {
+        // Prevent crash on death of human controlled bot
+        return;
+    }
 
     SDKCall(g_hPhysicsRemoveTouchedList, client);
 }
@@ -64,6 +69,6 @@ public Plugin myinfo =
     name = "[L4D/2] Reset Touch Links",
     author = "shqke",
     description = "Removes touch links on team change",
-    version = "1.2",
+    version = "1.3",
     url = "https://github.com/shqke/sp_public"
 };
