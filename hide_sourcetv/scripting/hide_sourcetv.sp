@@ -1,60 +1,60 @@
 #include <sourcemod>
+#include <sdktools_functions>
+#include <sdkhooks>
 
-enum PlayerConnectedState
-{
-    PlayerConnected,
-    PlayerDisconnecting,
-    PlayerDisconnected,
-};
+static int s_nSourceBotIndex = -1;
 
-void SetPlayerConnectedState(int client, PlayerConnectedState value)
+public void Handler_ResourceThink(int entity)
 {
-    // Compute offset, relative to other prop
-    // CBasePlayer::m_iConnected is located before CBasePlayer::m_ArmorValue
-    static int m_iConnected = -1;
-    if (m_iConnected == -1) {
-        // CBasePlayer doesn't send this but CCSPlayer does.
-        m_iConnected = FindSendPropInfo("CCSPlayer", "m_ArmorValue");
-        if (m_iConnected <= 0) {
-            SetFailState("Unable to find offset for \"CCSPlayer::m_ArmorValue\"");
-        }
+    if (s_nSourceBotIndex == -1) {
+        SDKUnhook(entity, SDKHook_ThinkPost, Handler_ResourceThink);
         
-        m_iConnected -= 4;
+        return;
     }
-
-    SetEntData(client, m_iConnected, value);
+    
+    SetEntProp(entity, Prop_Send, "m_bConnected", 0, .element = s_nSourceBotIndex);
 }
 
-void SetHLTVBotConnectedState(PlayerConnectedState newState)
+public void OnClientPutInServer(int client)
 {
-    for (int i = 1; i <= MaxClients; i++) {
-        if (IsClientInGame(i) && IsClientSourceTV(i)) {
-            SetPlayerConnectedState(i, newState);
-            return;
-        }
-    }
-}
-
-public void Event_player_activate(Event event, const char[] name, bool dontBroadcast)
-{
-    int client = GetClientOfUserId(event.GetInt("userid"));
     if (!IsClientSourceTV(client)) {
         return;
     }
     
-    SetPlayerConnectedState(client, PlayerDisconnected);
+    s_nSourceBotIndex = client;
+    
+    int entPlayerResource = FindEntityByClassname(INVALID_ENT_REFERENCE, "terror_player_manager");
+    if (IsValidEdict(entPlayerResource)) {
+        SDKHook(entPlayerResource, SDKHook_ThinkPost, Handler_ResourceThink);
+    }
+}
+
+public void OnClientDisconnect_Post(int client)
+{
+    if (s_nSourceBotIndex == -1) {
+        return;
+    }
+    
+    if (s_nSourceBotIndex == client) {
+        s_nSourceBotIndex = -1;
+    }
 }
 
 public void OnPluginStart()
 {
-    SetHLTVBotConnectedState(PlayerDisconnected);
-    
-    HookEvent("player_activate", Event_player_activate, EventHookMode_Post);
-}
-
-public void OnPluginEnd()
-{
-    SetHLTVBotConnectedState(PlayerConnected);
+    for (int i = 1; i <= MaxClients; i++) {
+        if (!IsClientInGame(i)) {
+            continue;
+        }
+        
+        if (!IsClientSourceTV(i)) {
+            continue;
+        }
+        
+        OnClientPutInServer(i);
+        
+        break;
+    }
 }
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -76,6 +76,6 @@ public Plugin myinfo =
     name = "[L4D/2] Hide SourceTV Bot",
     author = "shqke",
     description = "Hides SourceTV bot from scoreboard",
-    version = "1.1",
+    version = "1.2",
     url = "https://github.com/shqke/sp_public"
 };
