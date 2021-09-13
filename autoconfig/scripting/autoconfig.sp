@@ -83,15 +83,23 @@ public void Event_difficulty_changed(Event event, const char[] name, bool dontBr
 
 public void OnMapStart()
 {
-    g_bValidMission = MissionSymbol.IsValid(CurrentMission);
+    ExecuteConfig("level_start");
+}
+
+public void OnConfigsExecuted()
+{
+    g_bValidMission = MissionSymbol.IsValid(CurrentMission) && !CurrentMission.IsDisabled;
     if (g_bValidMission) {
         CurrentMission.GetName(g_szCurrentMission, sizeof(g_szCurrentMission));
         Util_LowerCase(g_szCurrentMission);
         
         ExecuteConfig("mission_%s", g_szCurrentMission);
     }
+    else if (CurrentMission.IsDisabled) {
+        ExecuteConfig("disabled_mission");
+    }
     
-    g_bValidGamemode = ModeSymbol.IsValid(CurrentMode);
+    g_bValidGamemode = ModeSymbol.IsValid(CurrentMode) && !CurrentMode.IsDisabled;
     if (g_bValidGamemode) {
         CurrentMode.GetName(g_szCurrentMode, sizeof(g_szCurrentMode));
         Util_LowerCase(g_szCurrentMode);
@@ -129,6 +137,14 @@ public void OnMapStart()
             ExecuteConfig("mode_single_chapter");
         }
     }
+    else if (CurrentMode.IsDisabled) {
+        ExecuteConfig("disabled_mode");
+    }
+}
+
+public void OnMapEnd()
+{
+    ExecuteConfig("level_end");
 }
 
 public void OnPluginStart()
@@ -154,6 +170,6 @@ public Plugin myinfo =
     name = "[L4D2] Config Presets",
     author = "shqke",
     description = "Execute relevant configs at level init",
-    version = "1.0",
+    version = "1.1",
     url = "https://github.com/shqke/sp_public"
 };
