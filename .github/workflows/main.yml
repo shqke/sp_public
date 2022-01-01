@@ -47,13 +47,15 @@ jobs:
           # Prepare hierarchy
           mkdir -p package/addons/sourcemod/plugins/
           
-          find sp_public -mindepth 2 -maxdepth 2 -type d -not -path 'sp_public/\.*' -print | while read PLUGIN_DIR; do
+          find sp_public -mindepth 2 -maxdepth 2 -type d -not -path 'sp_public/\.*' -print | while read PLUGIN_DIR
+          do
             # Copy other files (sources, gamedata, configs)
             cp -ra "$PLUGIN_DIR" package/addons/sourcemod/
             
-            find "$PLUGIN_DIR" -type f -name '*.sp' -print | while read PLUGIN_FILE; do
+            find "$PLUGIN_DIR" -type f -name '*.sp' -print | while read PLUGIN_FILE
+            do
               # Compile every SourcePawn source file
-              spcomp -v2 -i "$PLUGIN_DIR/include" "$PLUGIN_FILE"
+              spcomp -v2 -i "${includePath}" -i "${PLUGIN_DIR}/include" "$PLUGIN_FILE"
             done
           done
           
