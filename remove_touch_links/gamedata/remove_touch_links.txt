@@ -21,8 +21,8 @@
 			{
 				"library"	"server"
 				// Look for "remove 0x%x: %s-%s (%d-%d)", pick xref with a while loop
-				// 51 55 8B 6C 24 0C 8B 85 54 03 00 00 
-				"windows"	"\x51\x55\x8B\x6C\x24\x0C\x8B\x85\x54\x03\x00\x00"
+				// 83 EC ? 55 8B ? ? ? 8B ? ? ? ? ? D1
+				"windows"	"\x83\xEC\x2A\x55\x8B\x2A\x2A\x2A\x8B\x2A\x2A\x2A\x2A\x2A\xD1"
 			}
 		}
 	}
