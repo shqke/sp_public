@@ -7,7 +7,7 @@
 			"CWeaponSpawn::GiveItem"
 			{
 				"linux"		"247"
-				"windows"	"248"
+				"windows"	"244"
 			}
 		}
 	}
