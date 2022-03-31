@@ -1,0 +1,87 @@
+"Games"
+{
+	"#default"
+	{
+		"Offsets"
+		{
+			"CHLTVDirector::IHLTVDirector"
+			{
+				"linux"		"16"
+				"windows"	"16"
+				"mac"		"16"
+			}
+		}
+			
+		"Signatures"
+		{
+			"CreateInterface"
+			{
+				"library"	"server"
+				"linux"		"@CreateInterface"
+				"windows"	"@CreateInterface"
+				"mac"		"@CreateInterface"
+			}
+			
+			"CHLTVDirector::BuildCameraList"
+			{
+				"library"	"server"
+				"linux"		"@_ZN13CHLTVDirector15BuildCameraListEv"
+				"mac"		"@_ZN13CHLTVDirector15BuildCameraListEv"
+			}
+			
+			"CHLTVDirector::RemoveEventsFromHistory"
+			{
+				"library"	"server"
+				"linux"		"@_ZN13CHLTVDirector23RemoveEventsFromHistoryEi"
+				"mac"		"@_ZN13CHLTVDirector23RemoveEventsFromHistoryEi"
+			}
+		}
+	}
+
+	"left4dead"
+	{
+		"Signatures"
+		{
+			"CHLTVDirector::BuildCameraList"
+			{
+				"library"	"server"
+				// same as for left4dead2
+				// 83 EC 18 56 57 8B F1 68 00 01 00 00 
+				"windows"	"\x83\xEC\x18\x56\x57\x8B\xF1\x68\x00\x01\x00\x00"
+			}
+			
+			"CHLTVDirector::RemoveEventsFromHistory"
+			{
+				"library"	"server"
+				// same as for left4dead2
+				// 55 8B EC 83 EC 08 53 8D 99 D0 01 00 00 
+				"windows"	"\x55\x8B\xEC\x83\xEC\x08\x53\x8D\x99\xD0\x01\x00\x00"
+			}
+		}
+	}
+
+	"left4dead2"
+	{
+		"Signatures"
+		{
+			"CHLTVDirector::BuildCameraList"
+			{
+				"library"	"server"
+				// looking for second vtable for CCSHLTVDirector (one that implements CBaseGameSystemPerFrame)
+				// ^ first vtable entry (CBaseGameSystemPerFrame::Name) in body would return (char const *)"CHLTVDirector"
+				// sixth entry is CHLTVDirector::LevelInitPreEntity
+				// first thiscall there is CHLTVDirector::BuildCameraList
+				// 55 8B EC 83 EC 18 56 57 8B F1 68 00 01 00 00 
+				"windows"	"\x55\x8B\xEC\x83\xEC\x18\x56\x57\x8B\xF1\x68\x00\x01\x00\x00"
+			}
+			
+			"CHLTVDirector::RemoveEventsFromHistory"
+			{
+				"library"	"server"
+				// same as "CHLTVDirector::BuildCameraList", but second call within "CHLTVDirector::LevelInitPreEntity"
+				// 51 53 55 8B E9 8D 9D D0 01 00 00 
+				"windows"	"\x51\x53\x55\x8B\xE9\x8D\x9D\xD0\x01\x00\x00"
+			}
+		}
+	}
+}
