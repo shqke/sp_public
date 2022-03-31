@@ -3,10 +3,10 @@
 #include <sdktools_engine>
 #include <sdktools_entinput>
 
-#include "hltv_cameras/util"
-#include "hltv_cameras/sdk"
-#include "hltv_cameras/cache"
-#include "hltv_cameras/parser"
+#include <hltv_cameras/util>
+#include <hltv_cameras/sdk>
+#include <hltv_cameras/cache>
+#include <hltv_cameras/parser>
 
 public Action sm_addhltvcamera(int client, int argc)
 {
@@ -148,6 +148,6 @@ public Plugin myinfo =
     name = "Manage HLTV Cameras",
     author = "shqke",
     description = "Manage point_viewcontrol entities used by HLTV Director on the fly",
-    version = "1.0",
+    version = "1.1",
     url = "https://github.com/shqke/sp_public"
 };

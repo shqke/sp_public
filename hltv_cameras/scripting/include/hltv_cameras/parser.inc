@@ -3,8 +3,8 @@
 #endif
 #define _hltv_cameras_parser_included
 
-#include "hltv_cameras/cache"
-#include "hltv_cameras/util"
+#include <hltv_cameras/cache>
+#include <hltv_cameras/util>
 
 #define MAX_NUM_CAMERAS 64 // support up to 64 fixed cameras per level
 
@@ -72,7 +72,7 @@ void CameraCache_Parse()
     GetCurrentMap(levelName, sizeof(levelName));
     
     char path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, path, sizeof(path), CONFIG_PATH_FMT, levelName);
+    BuildPath(Path_SM, path, sizeof(path), CONFIG_PATH_FMT, levelName, GetEngineVersion());
     
     s_hParser.ParseFile(path);
     

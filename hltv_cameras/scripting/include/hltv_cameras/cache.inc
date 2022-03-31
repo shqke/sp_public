@@ -3,9 +3,12 @@
 #endif
 #define _hltv_cameras_cache_included
 
+#include <@shqke/util/files>
+
 #define MAX_CAMERA_NAME 128
 
-#define CONFIG_PATH_FMT "configs/hltv_cameras/%s.cfg"
+#define CONFIG_DIR_PATH "configs/hltv_cameras/"
+#define CONFIG_PATH_FMT CONFIG_DIR_PATH ... "%s.%u.cfg"
 
 const int CameraSlot_Name = 0;
 const int CameraSlot_Origin = ( MAX_CAMERA_NAME / 4 ) + 1;
@@ -47,7 +50,7 @@ void CameraCache_Save()
     GetCurrentMap(levelName, sizeof(levelName));
     
     char tempPath[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, tempPath, sizeof(tempPath), CONFIG_PATH_FMT ... ".temp", levelName);
+    BuildPath(Path_SM, tempPath, sizeof(tempPath), CONFIG_PATH_FMT ... ".temp", levelName, GetEngineVersion());
     
     File file = OpenFile(tempPath, "wb");
     if (file == null) {
@@ -78,7 +81,7 @@ void CameraCache_Save()
     file.Close();
     
     char path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, path, sizeof(path), CONFIG_PATH_FMT, levelName);
+    BuildPath(Path_SM, path, sizeof(path), CONFIG_PATH_FMT, levelName, GetEngineVersion());
     
     if (!RenameFile(path, tempPath)) {
         LogError("Unable to move file (oldpath: \"%s\", newpath: \"%s\") for writing", tempPath, path);
@@ -190,4 +193,12 @@ void CameraCache_Init()
 {
     s_hCameras = new ArrayList(CameraSlot_Max, 100);
     s_hCameras.Clear();
+    
+    char path[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, path, sizeof(path), CONFIG_DIR_PATH);
+    
+    // File mode - 0775 (u+rwx g+rwx o+rx), use umask on linux to override this
+    if (!Util_CreateDirHierarchy(path, 0x1FD)) {
+        LogError("Failed to create directory hierarchy (path: \"%s\")", path);
+    }
 }
