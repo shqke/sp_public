@@ -68,11 +68,14 @@ void CameraCache_Parse()
     CameraCache_Clear();
     s_bInSection = false;
     
+    char gameName[64];
+    GetGameFolderName(gameName, sizeof(gameName));
+    
     char levelName[128];
     GetCurrentMap(levelName, sizeof(levelName));
     
     char path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, path, sizeof(path), CONFIG_PATH_FMT, levelName, GetEngineVersion());
+    BuildPath(Path_SM, path, sizeof(path), CONFIG_PATH_FMT, gameName, levelName);
     
     s_hParser.ParseFile(path);
     

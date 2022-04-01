@@ -7,8 +7,8 @@
 
 #define MAX_CAMERA_NAME 128
 
-#define CONFIG_DIR_PATH "configs/hltv_cameras/"
-#define CONFIG_PATH_FMT CONFIG_DIR_PATH ... "%s.%u.cfg"
+#define CONFIG_DIR_PATH "configs/hltv_cameras/%s/"
+#define CONFIG_PATH_FMT CONFIG_DIR_PATH ... "%s.cfg"
 
 const int CameraSlot_Name = 0;
 const int CameraSlot_Origin = ( MAX_CAMERA_NAME / 4 ) + 1;
@@ -46,11 +46,14 @@ void CameraCache_GetOrigin(int index, float originOut[3])
 
 void CameraCache_Save()
 {
+    char gameName[64];
+    GetGameFolderName(gameName, sizeof(gameName));
+    
     char levelName[128];
     GetCurrentMap(levelName, sizeof(levelName));
     
     char tempPath[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, tempPath, sizeof(tempPath), CONFIG_PATH_FMT ... ".temp", levelName, GetEngineVersion());
+    BuildPath(Path_SM, tempPath, sizeof(tempPath), CONFIG_PATH_FMT ... ".temp", gameName, levelName);
     
     File file = OpenFile(tempPath, "wb");
     if (file == null) {
@@ -81,7 +84,7 @@ void CameraCache_Save()
     file.Close();
     
     char path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, path, sizeof(path), CONFIG_PATH_FMT, levelName, GetEngineVersion());
+    BuildPath(Path_SM, path, sizeof(path), CONFIG_PATH_FMT, gameName, levelName);
     
     if (!RenameFile(path, tempPath)) {
         // If implicit overwrite fails (Windows) - try to delete the old file
@@ -199,8 +202,11 @@ void CameraCache_Init()
     s_hCameras = new ArrayList(CameraSlot_Max, 100);
     s_hCameras.Clear();
     
+    char gameName[64];
+    GetGameFolderName(gameName, sizeof(gameName));
+    
     char path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, path, sizeof(path), CONFIG_DIR_PATH);
+    BuildPath(Path_SM, path, sizeof(path), CONFIG_DIR_PATH, gameName);
     
     // File mode - 0775 (u+rwx g+rwx o+rx), use umask on linux to override this
     if (!Util_CreateDirHierarchy(path, 0x1FD)) {
