@@ -84,9 +84,18 @@ void CameraCache_Save()
     BuildPath(Path_SM, path, sizeof(path), CONFIG_PATH_FMT, levelName, GetEngineVersion());
     
     if (!RenameFile(path, tempPath)) {
-        LogError("Unable to move file (oldpath: \"%s\", newpath: \"%s\") for writing", tempPath, path);
+        // If implicit overwrite fails (Windows) - try to delete the old file
+        if (FileExists(path) && !DeleteFile(path)) {
+            LogError("Unable to delete an old config file (path: \"%s\")", path);
+            
+            return;
+        }
         
-        return;
+        if (!RenameFile(path, tempPath)) {
+            LogError("Unable to move file (oldpath: \"%s\", newpath: \"%s\")", tempPath, path);
+            
+            return;
+        }
     }
 }
 
@@ -133,8 +142,6 @@ int CameraCache_AddCamera(const char[] cameraName, const float origin[3])
         s_hCameras.Set(index, origin[i], CameraSlot_Origin + i);
     }
     
-    CameraCache_Save();
-    
     return s_hCameras.Length;
 }
 
@@ -148,8 +155,6 @@ void CameraCache_MoveCamera(int index, const float origin[3])
     if (IsValidEdict(cameraRef)) {
         TeleportEntity(cameraRef, origin, NULL_VECTOR, NULL_VECTOR);
     }
-    
-    CameraCache_Save();
 }
 
 void CameraCache_DeleteCamera(int index)

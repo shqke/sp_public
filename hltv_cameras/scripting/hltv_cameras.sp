@@ -33,6 +33,8 @@ public Action sm_addhltvcamera(int client, int argc)
     }
     
     CameraCache_AddCamera(cameraName, origin);
+    CameraCache_Save();
+    
     HLTVDirector_BuildCameraList();
     
     ReplyToCommand(client, "Successfully added new camera \"%s\".", cameraName);
@@ -65,6 +67,7 @@ public Action sm_sethltvcamera(int client, int argc)
     }
     
     CameraCache_MoveCamera(index, origin);
+    CameraCache_Save();
     
     ReplyToCommand(client, "Successfully moved camera \"%s\" to %f %f %f.", cameraName, origin[0], origin[1], origin[2]);
     LogAction(client, -1, "Added camera \"%s\" (origin: %f %f %f) by %L", cameraName, origin[0], origin[1], origin[2], client);
@@ -148,6 +151,6 @@ public Plugin myinfo =
     name = "Manage HLTV Cameras",
     author = "shqke",
     description = "Manage point_viewcontrol entities used by HLTV Director on the fly",
-    version = "1.1",
+    version = "1.2",
     url = "https://github.com/shqke/sp_public"
 };
