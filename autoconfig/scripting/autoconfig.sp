@@ -84,6 +84,11 @@ public void Event_difficulty_changed(Event event, const char[] name, bool dontBr
 public void OnMapStart()
 {
     ExecuteConfig("level_start");
+    
+    char levelName[128];
+    GetCurrentMap(levelName, sizeof(levelName));
+    
+    ExecuteConfig("map_%s", levelName);
 }
 
 public void OnConfigsExecuted()
@@ -170,6 +175,6 @@ public Plugin myinfo =
     name = "[L4D2] Config Presets",
     author = "shqke",
     description = "Execute relevant configs at level init",
-    version = "1.1",
+    version = "1.2",
     url = "https://github.com/shqke/sp_public"
 };

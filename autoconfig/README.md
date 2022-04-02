@@ -12,6 +12,7 @@ Executes related configs at level change (`.cfg` files must be located inside fo
 - `mode_has_pz.cfg` - mode allows player zombies (versus, scavenge)
 - `mode_single_chapter.cfg` - mode is of a single chapter type (survival, scavenge)
 - `level_start.cfg` - executed after `servercfgfile` (`server.cfg`) but before ones above
+- `map_<mapname>.cfg` - executed after `level_start.cfg`
 - `level_end.cfg` - executed before `level_start.cfg` on level change
 
 Game modes, mission names and difficulties are lowercased before execution for consistency.
