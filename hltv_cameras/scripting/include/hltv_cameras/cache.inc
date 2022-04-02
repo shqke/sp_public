@@ -5,6 +5,7 @@
 
 #include <@shqke/util/files>
 
+#define MAX_NUM_CAMERAS 64 // support up to 64 fixed cameras per level
 #define MAX_CAMERA_NAME 128
 
 #define CONFIG_DIR_PATH "configs/hltv_cameras/%s/"
@@ -119,8 +120,12 @@ void CameraCache_GenerateName(char[] cameraName, int maxlength, const char[] bas
     }
 }
 
-int CameraCache_AddCamera(const char[] cameraName, const float origin[3])
+bool CameraCache_AddCamera(const char[] cameraName, const float origin[3])
 {
+    if (s_hCameras.Length == MAX_NUM_CAMERAS) {
+        return false;
+    }
+    
     int cameraRef = INVALID_ENT_REFERENCE;
     
     int index = s_hCameras.FindString(cameraName);
@@ -145,7 +150,7 @@ int CameraCache_AddCamera(const char[] cameraName, const float origin[3])
         s_hCameras.Set(index, origin[i], CameraSlot_Origin + i);
     }
     
-    return s_hCameras.Length;
+    return true;
 }
 
 void CameraCache_MoveCamera(int index, const float origin[3])
@@ -199,7 +204,7 @@ void CameraCache_Clear()
 
 void CameraCache_Init()
 {
-    s_hCameras = new ArrayList(CameraSlot_Max, 100);
+    s_hCameras = new ArrayList(CameraSlot_Max, MAX_NUM_CAMERAS);
     s_hCameras.Clear();
     
     char gameName[64];

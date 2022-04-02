@@ -6,8 +6,6 @@
 #include <hltv_cameras/cache>
 #include <hltv_cameras/util>
 
-#define MAX_NUM_CAMERAS 64 // support up to 64 fixed cameras per level
-
 static bool s_bInSection = false;
 static SMCParser s_hParser = null;
 static char s_szCameraName[MAX_CAMERA_NAME];
@@ -35,8 +33,7 @@ public SMCResult Handler_ParseLeaveSection(SMCParser smc)
     
     s_bInSection = false;
     
-    int numCameras = CameraCache_AddCamera(s_szCameraName, s_vecOrigin);
-    if (numCameras >= MAX_NUM_CAMERAS) {
+    if (!CameraCache_AddCamera(s_szCameraName, s_vecOrigin)) {
         return SMCParse_Halt;
     }
     
