@@ -38,20 +38,21 @@ jobs:
       - name: Checking out own repository
         uses: actions/checkout@v2
         with:
-          path: sp_public
+          path: src
           
       - name: Compiling plugins
         shell: bash
         run: |
+          PACKAGE_SM_DIR="package/addons/sourcemod"
+          DEP_DIR="${GITHUB_WORKSPACE}/src/.deps"
+          
           # Prepare hierarchy
-          mkdir -p package/addons/sourcemod/plugins/
+          mkdir -p "${PACKAGE_SM_DIR}/plugins/"
           
-          DEP_DIR="${GITHUB_WORKSPACE}/sp_public/.deps"
-          
-          find sp_public -mindepth 2 -maxdepth 2 -type d -not -path 'sp_public/\.*' -print | while read PLUGIN_DIR
+          find src -mindepth 2 -maxdepth 2 -type d -not -path 'src/\.*' -print | while read PLUGIN_DIR
           do
             # Copy other files (sources, gamedata, configs)
-            cp -ra "$PLUGIN_DIR" package/addons/sourcemod/
+            cp -ra "$PLUGIN_DIR" "${PACKAGE_SM_DIR}/"
             
             find "$PLUGIN_DIR" -type f -name '*.sp' -print | while read PLUGIN_FILE
             do
@@ -60,10 +61,16 @@ jobs:
             done
           done
           
-          cp -ra "${DEP_DIR}/include" package/addons/sourcemod/scripting/
+          # Copy local deps
+          cp -ra "${DEP_DIR}/include" "${PACKAGE_SM_DIR}/scripting/"
+          
+          # Retrieve remote deps
+          wget -O - "https://github.com/alliedmodders/sourcemod/raw/master/plugins/include/dhooks.inc" > "${PACKAGE_SM_DIR}/scripting/include/dhooks.inc"
+          wget -O - "https://github.com/peace-maker/sourcetvmanager/raw/master/sourcetvmanager.inc" > "${PACKAGE_SM_DIR}/scripting/include/sourcetvmanager.inc"
+          wget -O - "https://github.com/shqke/imatchext/raw/master/extra/scripting/include/imatchext.inc" > "${PACKAGE_SM_DIR}/scripting/include/imatchext.inc"
           
           # Move compiled files
-          mv *.smx package/addons/sourcemod/plugins/ &> /dev/null
+          mv *.smx "${PACKAGE_SM_DIR}/plugins/" &> /dev/null
           
           # Do not upload package if there's nothing to upload
           find package/ -mindepth 1 -type d -empty -delete
