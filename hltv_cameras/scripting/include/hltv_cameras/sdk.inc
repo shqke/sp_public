@@ -9,6 +9,13 @@
 
 #define INTERFACEVERSION_HLTVDIRECTOR "HLTVDirector001"
 
+// interface return status
+enum 
+{
+    IFACE_OK = 0,
+    IFACE_FAILED
+};
+
 static Handle s_hCHLTVDirector_BuildCameraList = null;
 static Handle s_hCHLTVDirector_RemoveEventsFromHistory = null;
 static Address s_pHLTVDirector = Address_Null;
@@ -52,6 +59,9 @@ void GameConfig_LoadOrFail()
         s_hCHLTVDirector_RemoveEventsFromHistory = EndPrepSDKCall();
     }
     
+    char interfaceName[128] = INTERFACEVERSION_HLTVDIRECTOR;
+    GameConfGetKeyValue(gc, "INTERFACEVERSION_HLTVDIRECTOR", interfaceName, sizeof(interfaceName));
+    
     int offset = GameConfGetOffset(gc, "CHLTVDirector::IHLTVDirector");
 
     delete gc;
@@ -59,14 +69,21 @@ void GameConfig_LoadOrFail()
     if (hCreateInterface == null) {
         SetFailState("Failed to prepare SDKCall for \"CreateInterface\" (gamedata file: \"" ... GAMEDATA_FILE ... ".txt\")");
     }
-    else if (s_hCHLTVDirector_BuildCameraList == null) {
-        SetFailState("Failed to prepare SDKCall for \"CHLTVDirector::BuildCameraList\" (gamedata file: \"" ... GAMEDATA_FILE ... ".txt\")");
-    }
-    else if (s_hCHLTVDirector_RemoveEventsFromHistory == null) {
-        SetFailState("Failed to prepare SDKCall for \"CHLTVDirector::RemoveEventsFromHistory\" (gamedata file: \"" ... GAMEDATA_FILE ... ".txt\")");
-    }
     
-    s_pHLTVDirector = SDKCall(hCreateInterface, INTERFACEVERSION_HLTVDIRECTOR, Address_Null) - view_as<Address>( offset );
+    int retval = IFACE_OK;
+    s_pHLTVDirector = SDKCall(hCreateInterface, interfaceName, retval) - view_as<Address>( offset );
     
     delete hCreateInterface;
+    
+    if (retval != IFACE_OK) {
+        SetFailState("Failed to retrieve HLTVDirector interface pointer (gamedata file: \"" ... GAMEDATA_FILE ... ".txt\", name: \"%s\")", interfaceName);
+    }
+    
+    if (s_hCHLTVDirector_BuildCameraList == null) {
+        SetFailState("Failed to prepare SDKCall for \"CHLTVDirector::BuildCameraList\" (gamedata file: \"" ... GAMEDATA_FILE ... ".txt\")");
+    }
+    
+    if (s_hCHLTVDirector_RemoveEventsFromHistory == null) {
+        SetFailState("Failed to prepare SDKCall for \"CHLTVDirector::RemoveEventsFromHistory\" (gamedata file: \"" ... GAMEDATA_FILE ... ".txt\")");
+    }
 }

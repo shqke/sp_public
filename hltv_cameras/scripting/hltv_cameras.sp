@@ -151,6 +151,6 @@ public Plugin myinfo =
     name = "Manage HLTV Cameras",
     author = "shqke",
     description = "Manage point_viewcontrol entities used by HLTV Director on the fly",
-    version = "1.3",
+    version = "1.4",
     url = "https://github.com/shqke/sp_public"
 };
