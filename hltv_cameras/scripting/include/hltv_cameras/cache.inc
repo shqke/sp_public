@@ -50,6 +50,16 @@ void CameraCache_Save()
     char gameName[64];
     GetGameFolderName(gameName, sizeof(gameName));
     
+    char configsPath[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, configsPath, sizeof(configsPath), CONFIG_DIR_PATH, gameName);
+    
+    // File mode - 0775 (u+rwx g+rwx o+rx), use umask on linux to override this
+    if (!Util_CreateDirHierarchy(configsPath, 0x1FD)) {
+        LogError("Failed to create directory (path: \"%s\")", configsPath);
+        
+        return;
+    }
+    
     char levelName[128];
     GetCurrentMap(levelName, sizeof(levelName));
     
@@ -209,12 +219,4 @@ void CameraCache_Init()
     
     char gameName[64];
     GetGameFolderName(gameName, sizeof(gameName));
-    
-    char path[PLATFORM_MAX_PATH];
-    BuildPath(Path_SM, path, sizeof(path), CONFIG_DIR_PATH, gameName);
-    
-    // File mode - 0775 (u+rwx g+rwx o+rx), use umask on linux to override this
-    if (!Util_CreateDirHierarchy(path, 0x1FD)) {
-        LogError("Failed to create directory hierarchy (path: \"%s\")", path);
-    }
 }
