@@ -49,6 +49,11 @@ jobs:
           # Prepare hierarchy
           mkdir -p "${PACKAGE_SM_DIR}/plugins/"
           
+          # Cache remote deps
+          wget -O - "https://github.com/alliedmodders/sourcemod/raw/master/plugins/include/dhooks.inc" > "${DEP_DIR}/include/dhooks.inc"
+          wget -O - "https://github.com/peace-maker/sourcetvmanager/raw/master/sourcetvmanager.inc" > "${DEP_DIR}/include/sourcetvmanager.inc"
+          wget -O - "https://github.com/shqke/imatchext/raw/master/extra/scripting/include/imatchext.inc" > "${DEP_DIR}/include/imatchext.inc"
+          
           find src -mindepth 2 -maxdepth 2 -type d -not -path 'src/\.*' -print | while read PLUGIN_DIR
           do
             # Copy other files (sources, gamedata, configs)
@@ -63,11 +68,6 @@ jobs:
           
           # Copy local deps
           cp -ra "${DEP_DIR}/include" "${PACKAGE_SM_DIR}/scripting/"
-          
-          # Retrieve remote deps
-          wget -O - "https://github.com/alliedmodders/sourcemod/raw/master/plugins/include/dhooks.inc" > "${PACKAGE_SM_DIR}/scripting/include/dhooks.inc"
-          wget -O - "https://github.com/peace-maker/sourcetvmanager/raw/master/sourcetvmanager.inc" > "${PACKAGE_SM_DIR}/scripting/include/sourcetvmanager.inc"
-          wget -O - "https://github.com/shqke/imatchext/raw/master/extra/scripting/include/imatchext.inc" > "${PACKAGE_SM_DIR}/scripting/include/imatchext.inc"
           
           # Move compiled files
           mv *.smx "${PACKAGE_SM_DIR}/plugins/" &> /dev/null
