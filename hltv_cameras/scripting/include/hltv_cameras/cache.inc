@@ -111,7 +111,7 @@ void CameraCache_GenerateName(char[] cameraName, int maxlength, const char[] bas
     }
     
     int maxCameraNum = s_hCameras.Length + 1;
-    for (int n = 1; n <= maxCameraNum; n++) {
+    for (int n = 1; n < maxCameraNum; n++) {
         Format(cameraName, maxlength, "%s_%02d", baseCameraName, n);
         if (s_hCameras.FindString(cameraName) == -1) {
             break;

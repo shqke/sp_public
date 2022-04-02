@@ -26,9 +26,6 @@ void HLTVDirector_BuildCameraList()
 
 void GameConfig_LoadOrFail()
 {
-    delete s_hCHLTVDirector_BuildCameraList;
-    delete s_hCHLTVDirector_RemoveEventsFromHistory;
-    
     Handle gc = LoadGameConfigFile(GAMEDATA_FILE);
     if (gc == null) {
         SetFailState("Failed to load gamedata file \"" ... GAMEDATA_FILE ... "\"");
