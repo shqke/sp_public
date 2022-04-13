@@ -4,7 +4,7 @@
 #define _hltv_cameras_parser_included
 
 #include <hltv_cameras/cache>
-#include <hltv_cameras/util>
+#include <@shqke/util/vector>
 
 static bool s_bInSection = false;
 static SMCParser s_hParser = null;
