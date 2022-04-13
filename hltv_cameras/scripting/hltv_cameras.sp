@@ -138,6 +138,11 @@ public void OnMapStart()
     CameraCache_Parse();
 }
 
+public void OnPluginEnd()
+{
+    CameraCache_Clear();
+}
+
 public void OnPluginStart()
 {
     GameConfig_LoadOrFail();
