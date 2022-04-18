@@ -4,6 +4,8 @@
 #define REQUIRE_EXTENSIONS
 #include <imatchext>
 
+#include <@shqke/util/string>
+
 ConVar z_difficulty = null;
 
 bool g_bValidMission = false;
@@ -16,15 +18,6 @@ bool g_bValidBaseGamemode = false;
 char g_szCurrentBaseMode[64];
 
 bool g_bHasDifficulty = false;
-
-void Util_LowerCase(char[] str)
-{
-    for (int i = 0; str[i] != '\0'; i ++) {
-        if (str[i] >= 'A' && str[i] <= 'Z') {
-            str[i] |= 0x20;
-        }
-    }
-}
 
 void ExecuteConfig(const char[] fmtName, any ...)
 {
