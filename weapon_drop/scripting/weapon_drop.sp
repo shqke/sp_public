@@ -6,7 +6,8 @@
 #define GAMEDATA_FILE "weapon_drop"
 #define TEAM_SURVIVOR 2
 
-Handle g_hCCSPlayer_CSWeaponDrop;
+Handle g_hCCSPlayer_CSWeaponDrop = null;
+EngineVersion g_EngineVersion = Engine_Unknown;
 
 bool CCSPlayer_CSDropWeapon(int client, int weapon, bool toss = false)
 {
@@ -32,48 +33,47 @@ void DropWeapon(int client)
         return;
     }
 
-    bool bHadDualWeapons = false;
-
-    char cls[64];
-    GetEdictClassname(weapon, cls, sizeof(cls));
-    if (strncmp(cls, "weapon_pistol", 13) == 0) {
-        bHadDualWeapons = GetEntProp(weapon, Prop_Send, "m_hasDualWeapons") != 0;
-        if (!bHadDualWeapons) {
+    char className[64];
+    GetEdictClassname(weapon, className, sizeof(className));
+    if (strncmp(className, "weapon_pistol", 13) == 0) {
+        if (g_EngineVersion == Engine_Left4Dead) {
+            PrintHintText(client, "You can't drop a secondary weapon");
+            
+            return;
+        }
+        
+        // NOTE: also matches weapon_pistol_magnum
+        if (GetEntProp(weapon, Prop_Send, "m_hasDualWeapons") == 0) {
             PrintHintText(client, "You can't drop a pistol");
             
             return;
         }
+        
+        // Other pistol should get absorbed by spawn
+        // ref: CPistol::Drop(CPistol *this, const Vector *a2)
+        SDKHooks_DropWeapon(client, weapon);
+        
+        // Two weapons will be dropped - equip available
+        EquipPlayerWeapon(client, weapon);
+        
+        return;
     }
-    else if (strcmp(cls, "weapon_melee") == 0) {
+    
+    if (strcmp(className, "weapon_melee") == 0) {
         PrintHintText(client, "You can't drop a melee");
         
         return;
     }
-    else if (strcmp(cls, "weapon_chainsaw") == 0) {
+    
+    if (strcmp(className, "weapon_chainsaw") == 0) {
         PrintHintText(client, "You can't drop a chainsaw");
         
         return;
     }
 
-    if (bHadDualWeapons) {
-        // Other pistol should get absorbed by spawn
-        // ref: CPistol::Drop(CPistol *this, const Vector *a2)
-        SDKHooks_DropWeapon(client, weapon);
-    }
-    else {
-        // Weapon gets absorbed by spawn (if there's any nearby)
-        // ref: CCSPlayer::CSWeaponDrop(CCSPlayer *this, CBaseCombatWeapon *a2, bool drop_shield, bool throw_forward, Vector *throw_direction)
-        CCSPlayer_CSDropWeapon(client, weapon, true);
-    }
-
-    if (bHadDualWeapons) {
-        // Unset dual wielding
-        SetEntProp(weapon, Prop_Send, "m_hasDualWeapons", 0);
-        SetEntProp(weapon, Prop_Send, "m_isDualWielding", 0);
-        
-        // Two weapons will fall - equip available
-        EquipPlayerWeapon(client, weapon);
-    }
+    // Weapon gets absorbed by spawn (if there's any nearby)
+    // ref: CCSPlayer::CSWeaponDrop(CCSPlayer *this, CBaseCombatWeapon *a2, bool drop_shield, bool throw_forward, Vector *throw_direction)
+    CCSPlayer_CSDropWeapon(client, weapon, true);
 }
 
 public Action sm_drop(int client, int args)
@@ -92,11 +92,13 @@ void LoadGameConfigOrFail()
 
     StartPrepSDKCall(SDKCall_Player);
     if (PrepSDKCall_SetFromConf(gc, SDKConf_Signature, "CCSPlayer::CSWeaponDrop")) {
-        PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
         PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
         PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain);
         PrepSDKCall_AddParameter(SDKType_Bool, SDKPass_Plain);
-        PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL);
+        if (g_EngineVersion == Engine_Left4Dead2) {
+            PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL);
+        }
+        PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
         g_hCCSPlayer_CSWeaponDrop = EndPrepSDKCall();
     }
 
@@ -116,7 +118,8 @@ public void OnPluginStart()
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    switch (GetEngineVersion()) {
+    g_EngineVersion = GetEngineVersion();
+    switch (g_EngineVersion) {
         case Engine_Left4Dead2, Engine_Left4Dead:
         {
             return APLRes_Success;
@@ -133,6 +136,6 @@ public Plugin myinfo =
     name = "[L4D/2] Weapon Drop",
     author = "shqke",
     description = "Allows you to drop your weapon with command sm_drop",
-    version = "1.1",
+    version = "1.2",
     url = "https://github.com/shqke/sp_public"
 };
