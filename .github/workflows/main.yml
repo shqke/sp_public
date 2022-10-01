@@ -32,7 +32,7 @@ jobs:
           echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
           
       - name: Setup SourcePawn compiler ${{ matrix.sm_version }}
-        uses: rumblefrog/setup-sp@master
+        uses: rumblefrog/setup-sp@v1.1.0
         with:
           version: ${{ matrix.sm_version }}
           
