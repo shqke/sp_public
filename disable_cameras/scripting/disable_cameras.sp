@@ -3,8 +3,8 @@
 #include <sdktools_entinput>
 
 // Fixed issues:
-// - Server crash when kicking a bot who have been an active target of camera (point_viewcontrol_survivor)
 // - Multiple visual spectator bugs after team swap in finale
+// - Improper deactivation of a player's assigned camera entity on a client disconnect (point_viewcontrol_survivor)
 
 public void Event_round_start_pre_entity(Event event, const char[] name, bool dontBroadcast)
 {
@@ -32,9 +32,6 @@ public void OnClientDisconnect(int client)
     if (strncmp(cls, "point_viewcontrol", 17) == 0) {
         // Matches CSurvivorCamera, CTriggerCamera
         if (strcmp(cls[17], "_survivor") == 0 || cls[17] == '\0') {
-            // Disable entity to prevent CMoveableCamera::FollowTarget to cause a crash
-            // m_hTargetEnt EHANDLE is not checked for existence and can be NULL
-            // CBaseEntity::GetAbsAngles being called on causing a crash
             AcceptEntityInput(viewEntity, "Disable");
         }
         
