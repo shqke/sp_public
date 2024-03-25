@@ -11,17 +11,25 @@
 #define GAMEDATA_FILE "weapon_spawn_duplicate_fix"
 
 Handle g_hCWeaponSpawn_GiveItem = null;
+Handle g_hCWeaponSpawn_DecrementCount = null;
 ArrayStack g_hItems = null;
 
-public MRESReturn Handler_CWeaponSpawn_GiveItem(int spawner, Handle hReturn)
+MRESReturn Handler_CWeaponSpawn_GiveItem(int spawner, Handle hReturn)
 {
     if (GetEntProp(spawner, Prop_Data, "m_itemCount") == 0) {
         DHookSetReturn(hReturn, false);
-        
+
         return MRES_Supercede;
     }
 
     return MRES_Ignored;
+}
+
+MRESReturn Handler_CWeaponSpawn_DecrementCount(int spawner, Handle hReturn)
+{
+    DHookSetReturn(hReturn, GetEntProp(spawner, Prop_Data, "m_spawnflags") & (1<<3) ? false : true);
+
+    return MRES_Supercede;
 }
 
 void CheckClassAndHook(int entity)
@@ -30,13 +38,14 @@ void CheckClassAndHook(int entity)
     if (!GetEntityNetClass(entity, className, sizeof(className))) {
         return;
     }
-    
+
     if (strcmp(className, "CWeaponSpawn") != 0) {
         return;
     }
 
     // Remember to unhook later
     g_hItems.Push(DHookEntity(g_hCWeaponSpawn_GiveItem, false, entity));
+    g_hItems.Push(DHookEntity(g_hCWeaponSpawn_DecrementCount, false, entity));
 }
 
 public void OnEntityCreated(int entity, const char[] className)
@@ -65,8 +74,6 @@ void LoadGameConfigOrFail()
 
     int offset = GameConfGetOffset(gc, "CWeaponSpawn::GiveItem");
 
-    delete gc;
-
     if (offset == -1) {
         SetFailState("Unable to get offset for \"CWeaponSpawn::GiveItem\" from game config (file: \"" ... GAMEDATA_FILE ... ".txt\")");
     }
@@ -78,6 +85,21 @@ void LoadGameConfigOrFail()
 
     DHookAddParam(g_hCWeaponSpawn_GiveItem, HookParamType_CBaseEntity);
     DHookAddParam(g_hCWeaponSpawn_GiveItem, HookParamType_Int);
+
+    offset = GameConfGetOffset(gc, "CWeaponSpawn::ShouldPickupDecrementCount");
+
+    if (offset == -1) {
+        SetFailState("Unable to get offset for \"CWeaponSpawn::ShouldPickupDecrementCount\" from game config (file: \"" ... GAMEDATA_FILE ... ".txt\")");
+    }
+
+    g_hCWeaponSpawn_DecrementCount = DHookCreate(offset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity, Handler_CWeaponSpawn_DecrementCount);
+    if (g_hCWeaponSpawn_DecrementCount == null) {
+        SetFailState("Unable to hook \"CWeaponSpawn::ShouldPickupDecrementCount\" (given offset: %d)", offset);
+    }
+
+    DHookAddParam(g_hCWeaponSpawn_DecrementCount, HookParamType_ObjectPtr);
+
+    delete gc;
 }
 
 public void OnPluginStart()
@@ -97,7 +119,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     if (GetEngineVersion() == Engine_Left4Dead2) {
         return APLRes_Success;
     }
-    
+
     strcopy(error, err_max, "Plugin only supports Left 4 Dead 2.");
 
     return APLRes_SilentFailure;
@@ -108,6 +130,6 @@ public Plugin myinfo =
     name = "[L4D2] Weapon Duplicate Fix",
     author = "shqke",
     description = "Prevents a weapon to be taken from weapon spawn if its item counter has hit a zero",
-    version = "1.1",
+    version = "1.2",
     url = "https://github.com/shqke/sp_public"
 };
