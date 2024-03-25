@@ -9,6 +9,11 @@
 				"linux"		"247"
 				"windows"	"244"
 			}
+			"CWeaponSpawn::ShouldPickupDecrementCount"
+			{
+				"linux"		"241"
+				"windows"	"238"
+			}
 		}
 	}
 }
