@@ -1,4 +1,4 @@
-name: build
+name: CI
 
 on:
   push:
@@ -29,15 +29,15 @@ jobs:
       - name: Prepare env
         shell: bash
         run: |
-          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
           
       - name: Setup SourcePawn compiler ${{ matrix.sm_version }}
-        uses: rumblefrog/setup-sp@v1.1.0
+        uses: rumblefrog/setup-sp@master
         with:
           version: ${{ matrix.sm_version }}
           
       - name: Checking out own repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: src
           
@@ -77,7 +77,7 @@ jobs:
           find package/ -mindepth 1 -type d -empty -delete
           
       - name: Uploading package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: sppub-sm${{ matrix.sm_version }}-${{ env.GITHUB_SHA_SHORT }}
           path: package
