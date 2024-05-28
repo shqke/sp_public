@@ -20,63 +20,62 @@ jobs:
       fail-fast: false
       matrix:
         sm_version:
+          - "1.9"
           - "1.10"
           - "1.11"
           - "1.12"
           
     steps:
-      - name: Prepare env
-        shell: bash
-        run: |
-          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-          
-      - name: Setup SourcePawn compiler ${{ matrix.sm_version }}
-        uses: rumblefrog/setup-sp@master
-        with:
-          version: ${{ matrix.sm_version }}
-          
-      - name: Checking out own repository
+      - name: Checkout own repository
         uses: actions/checkout@v4
         with:
           path: src
           
-      - name: Compiling plugins
+      - name: Compile plugins
         shell: bash
         run: |
+          echo "GITHUB_SHA_SHORT=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
           PACKAGE_SM_DIR="package/addons/sourcemod"
           DEP_DIR="${GITHUB_WORKSPACE}/src/.deps"
-          
+          SPCOMP_BIN="addons/sourcemod/scripting/spcomp"
+          SPCOMP_BUILD=$(wget -qO- https://www.sourcemod.net/smdrop/${{ matrix.sm_version }}/sourcemod-latest-linux)
+
+          # Prepare sourcepawn compiler
+          wget -qO- "https://www.sourcemod.net/smdrop/${{ matrix.sm_version }}/${SPCOMP_BUILD}" |
+            tar -zxvf - addons/sourcemod/scripting/{include,spcomp}
+
           # Prepare hierarchy
           mkdir -p "${PACKAGE_SM_DIR}/plugins/"
-          
+
           # Cache remote deps
           wget -O - "https://github.com/alliedmodders/sourcemod/raw/master/plugins/include/dhooks.inc" > "${DEP_DIR}/include/dhooks.inc"
           wget -O - "https://github.com/peace-maker/sourcetvmanager/raw/master/sourcetvmanager.inc" > "${DEP_DIR}/include/sourcetvmanager.inc"
           wget -O - "https://github.com/shqke/imatchext/raw/master/extra/scripting/include/imatchext.inc" > "${DEP_DIR}/include/imatchext.inc"
-          
+
           find src -mindepth 2 -maxdepth 2 -type d -not -path 'src/\.*' -print | while read PLUGIN_DIR
-          do
-            # Copy other files (sources, gamedata, configs)
-            cp -ra "$PLUGIN_DIR" "${PACKAGE_SM_DIR}/"
-            
-            find "$PLUGIN_DIR" -type f -name '*.sp' -print | while read PLUGIN_FILE
             do
-              # Compile every SourcePawn source file
-              spcomp -v2 -i "${includePath}" -i "${PLUGIN_DIR}/include" -i "${DEP_DIR}/include" "$PLUGIN_FILE"
+              # Copy other files (sources, gamedata, configs)
+              cp -ra "$PLUGIN_DIR" "${PACKAGE_SM_DIR}/"
+
+              find "$PLUGIN_DIR" -type f -name '*.sp' -print | while read PLUGIN_FILE
+                do
+                  # Compile every SourcePawn source file
+                  "$SPCOMP_BIN" -v2 -i "${PLUGIN_DIR}/include" -i "${DEP_DIR}/include" "$PLUGIN_FILE"
+                done
             done
-          done
-          
+
           # Copy local deps
           cp -ra "${DEP_DIR}/include" "${PACKAGE_SM_DIR}/scripting/"
-          
+
           # Move compiled files
           mv *.smx "${PACKAGE_SM_DIR}/plugins/" &> /dev/null
-          
+
           # Do not upload package if there's nothing to upload
           find package/ -mindepth 1 -type d -empty -delete
           
       - name: Uploading package
         uses: actions/upload-artifact@v4
         with:
-          name: sppub-sm${{ matrix.sm_version }}-${{ env.GITHUB_SHA_SHORT }}
+          name: sp_public-sm${{ matrix.sm_version }}-${{ env.GITHUB_SHA_SHORT }}
           path: package
